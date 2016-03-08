@@ -96,7 +96,7 @@ if [[ "$HOUR" -eq "$DAILY_HOUR" ]]; then
   fi
 fi
 
-# doing hourly dump
+# upload dump
 BACKUP_KEY=$KEY_PREFIX\_$BACKUP_TYPE\_$NOW
 BACKUP_AWS_PATH=$(s3_key_path $BACKUP_KEY)
 
