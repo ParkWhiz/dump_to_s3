@@ -1,10 +1,19 @@
 #!/usr/bin/env bash
+# Number of hourly backups retained at once
 export HOURS_RETAINED=24
+# Number of daily backups retained at once
 export DAYS_RETAINED=14
+# Number of weekly backups retained at once
 export WEEKS_RETAINED=12
+# Hour to take daily backups (0 - 23)
 export DAILY_HOUR=0
+# Day of the week to make weekly backups (1 - 7)
 export WEEKLY_DAY=1
+# Day of the month to make monthly backups (1 - 28, you could also do 29-31, but then you'd miss February)
 export MONTHLY_DATE=1
+# Name of your s3 bucket
 export BUCKET_NAME="MY_BUCKET"
+# Prefix to append to all the keys that you'll be dumping in your bucket
 export KEY_PREFIX="PREFIX-FOR-S3-keys" # THIS SHOULD NOT INCLUDE ANY UNDERSCORES
+# Command to run to make a backup. Will be run with eval. The target file should be an excaped \$DUMP_FILE_NAME
 export BACKUP_COMMAND="pg_dump --file=\$DUMP_FILE_NAME"

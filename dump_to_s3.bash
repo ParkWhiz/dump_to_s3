@@ -2,6 +2,7 @@
 
 # http://stackoverflow.com/questions/59895/can-a-bash-script-tell-what-directory-its-stored-in
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
 source $SCRIPT_DIR/conf.bash
 
 DATE_FMT="%Y-%m-%dT%H:00:00"
@@ -55,48 +56,43 @@ remove_old_entries () {
   done
 }
 
-rescope_backup() {
-  # changes backup from hourly to daily, daily to weekly, etc
-  # $1 is the units that we're interested in. One of "H", "D", "W" for 
-  #    hour, day, week respectively
-  NEW_BACKUP_KEY=$KEY_PREFIX\_$1\_$NOW
-  NEW_BACKUP_AWS_PATH=$(s3_key_path $NEW_BACKUP_KEY)
-  aws s3 mv "$BACKUP_AWS_PATH" "$NEW_BACKUP_AWS_PATH"
-  BACKUP_KEY=$NEW_BACKUP_KEY
-  BACKUP_AWS_PATH=$NEW_BACKUP_AWS_PATH
-}
-
 NOW=$(date "+$DATE_FMT")
 HOUR=$((10#`date --date=$NOW +%H`))
 DOW=$((10#`date --date=$NOW +%u`))
 DAY=$((10#`date --date=$NOW +%d`))
 
-# doing hourly dump
-BACKUP_KEY=$KEY_PREFIX\_H\_$NOW
-DUMP_FILE_NAME=/tmp/$BACKUP_KEY
-BACKUP_AWS_PATH=$(s3_key_path $BACKUP_KEY)
-
+# Make backup
+DUMP_FILE_NAME=/tmp/$KEY_PREFIX\_$NOW
 echo "DUMPING DB TO $DUMP_FILE_NAME"
-$BACKUP_COMMAND
-cat 'dump' > $DUMP_FILE_NAME
-echo "COPYING TO S3 @ $BACKUP_AWS_PATH"
-aws s3 cp $DUMP_FILE_NAME $BACKUP_AWS_PATH
-rm "$DUMP_FILE_NAME"
+eval "$BACKUP_COMMAND"
 
 # rotation
+BACKUP_TYPE="H"
+echo "REMOVING OLD HOURLY BACKUPS"
 remove_old_entries "$NOW" "H"
 
 if [[ "$HOUR" -eq "$DAILY_HOUR" ]]; then
-  echo "HERE"
-  rescope_backup "D"
+  BACKUP_TYPE="D"
+  echo "REMOVING OLD DAILY BACKUPS"
   remove_old_entries "$NOW" "D"
 
   if [[ "$DOW" -eq "$WEEKLY_DAY" ]]; then
-    rescope_backup "W"
+    BACKUP_TYPE="W"
+    echo "REMOVING OLD WEEKLY BACKUPS"
     remove_old_entries "$NOW" "W"
 
     if [[ "$DAY" -eq "$MONTHLY_DATE" ]]; then
-      rescope_backup "M"
+      BACKUP_TYPE="M"
     fi
   fi
 fi
+
+# doing hourly dump
+BACKUP_KEY=$KEY_PREFIX\_$BACKUP_TYPE\_$NOW
+BACKUP_AWS_PATH=$(s3_key_path $BACKUP_KEY)
+
+echo "COPYING TO S3 @ $BACKUP_AWS_PATH"
+aws s3 cp $DUMP_FILE_NAME $BACKUP_AWS_PATH
+echo "REMOVING $DUMP_FILE_NAME"
+rm "$DUMP_FILE_NAME"
+
