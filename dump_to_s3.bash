@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 
-source ./conf.bash
+# http://stackoverflow.com/questions/59895/can-a-bash-script-tell-what-directory-its-stored-in
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+source $SCRIPT_DIR/conf.bash
 
 DATE_FMT="%Y-%m-%dT%H:00:00"
 
