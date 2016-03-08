@@ -66,6 +66,15 @@ DUMP_FILE_NAME=/tmp/$KEY_PREFIX\_$NOW
 echo "DUMPING DB TO $DUMP_FILE_NAME"
 eval "$BACKUP_COMMAND"
 
+# http://stackoverflow.com/questions/90418/exit-shell-script-based-on-process-exit-code
+rc=$? 
+if [[ $rc != 0 ]]; then 
+  echo "BACKUP COMMAND EXITED WITH RETURN CODE $rc. ABORTING"
+  echo "REMOVING $DUMP_FILE_NAME"
+  rm -f "$DUMP_FILE_NAME"
+  exit $rc; 
+fi
+
 # rotation
 BACKUP_TYPE="H"
 echo "REMOVING OLD HOURLY BACKUPS"
