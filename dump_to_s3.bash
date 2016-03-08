@@ -89,10 +89,10 @@ if [[ "$HOUR" -eq "$DAILY_HOUR" ]]; then
     BACKUP_TYPE="W"
     echo "REMOVING OLD WEEKLY BACKUPS"
     remove_old_entries "$NOW" "W"
+  fi
 
-    if [[ "$DAY" -eq "$MONTHLY_DATE" ]]; then
-      BACKUP_TYPE="M"
-    fi
+  if [[ "$DAY" -eq "$MONTHLY_DATE" ]]; then
+    BACKUP_TYPE="M"
   fi
 fi
 
