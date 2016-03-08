@@ -42,6 +42,9 @@ Particularly important are the variables:
 After editing `conf.bash`, you can add `dump_to_s3.bash` to crontab. The
 script is intended to be run once an hour.
 
+You may have to 
+[add the path of aws to your crontab](http://stackoverflow.com/questions/26480860/aws-not-working-working-from-cronjob)
+
 ## Behavior
 
 Every time it is invoked, `dump_to_s3.bash` will create a backup, upload the
