@@ -5,7 +5,7 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 source $SCRIPT_DIR/conf.bash
 
-DATE_FMT="%Y-%m-%dT%H:00:00"
+DATE_FMT="%Y-%m-%dT%H:%M:%S"
 
 declare -A SECONDS_PER_UNIT=( ["H"]=$[60 * 60] ["D"]=$[60 * 60 * 24] ["W"]=$[60 * 60 * 24 * 7] )
 declare -A RETENTION=( ["H"]="$HOURS_RETAINED" ["D"]="$DAYS_RETAINED" ["W"]="$WEEKS_RETAINED" )
