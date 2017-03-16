@@ -10,6 +10,10 @@ DATE_FMT="%Y-%m-%dT%H:%M:%S"
 declare -A SECONDS_PER_UNIT=( ["H"]=$[60 * 60] ["D"]=$[60 * 60 * 24] ["W"]=$[60 * 60 * 24 * 7] )
 declare -A RETENTION=( ["H"]="$HOURS_RETAINED" ["D"]="$DAYS_RETAINED" ["W"]="$WEEKS_RETAINED" )
 
+log () {
+  echo "$(date) - $1"
+}
+
 s3_bucket_path () {
   echo "s3://$BUCKET_NAME"
 }
@@ -63,31 +67,31 @@ DAY=$((10#`date --date=$NOW +%d`))
 
 # Make backup
 DUMP_FILE_NAME=/tmp/$KEY_PREFIX\_$NOW
-echo "DUMPING DB TO $DUMP_FILE_NAME"
+log "DUMPING DB TO $DUMP_FILE_NAME"
 eval "$BACKUP_COMMAND"
 
 # http://stackoverflow.com/questions/90418/exit-shell-script-based-on-process-exit-code
 rc=$? 
 if [[ $rc != 0 ]]; then 
-  echo "BACKUP COMMAND EXITED WITH RETURN CODE $rc. ABORTING"
-  echo "REMOVING $DUMP_FILE_NAME"
+  log "BACKUP COMMAND EXITED WITH RETURN CODE $rc. ABORTING"
+  log "REMOVING $DUMP_FILE_NAME"
   rm -f "$DUMP_FILE_NAME"
   exit $rc; 
 fi
 
 # rotation
 BACKUP_TYPE="H"
-echo "REMOVING OLD HOURLY BACKUPS"
+log "REMOVING OLD HOURLY BACKUPS"
 remove_old_entries "$NOW" "H"
 
 if [[ "$HOUR" -eq "$DAILY_HOUR" ]]; then
   BACKUP_TYPE="D"
-  echo "REMOVING OLD DAILY BACKUPS"
+  log "REMOVING OLD DAILY BACKUPS"
   remove_old_entries "$NOW" "D"
 
   if [[ "$DOW" -eq "$WEEKLY_DAY" ]]; then
     BACKUP_TYPE="W"
-    echo "REMOVING OLD WEEKLY BACKUPS"
+    log "REMOVING OLD WEEKLY BACKUPS"
     remove_old_entries "$NOW" "W"
   fi
 
@@ -100,8 +104,8 @@ fi
 BACKUP_KEY=$KEY_PREFIX\_$BACKUP_TYPE\_$NOW
 BACKUP_AWS_PATH=$(s3_key_path $BACKUP_KEY)
 
-echo "COPYING TO S3 @ $BACKUP_AWS_PATH"
+log "COPYING TO S3 @ $BACKUP_AWS_PATH"
 aws s3 cp $DUMP_FILE_NAME $BACKUP_AWS_PATH
-echo "REMOVING $DUMP_FILE_NAME"
+log "REMOVING $DUMP_FILE_NAME"
 rm "$DUMP_FILE_NAME"
 
